@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 
 	"github.com/Dreamacro/clash/adapter/outbound"
 	"github.com/Dreamacro/clash/common/murmur3"
@@ -13,8 +12,6 @@ import (
 	"github.com/Dreamacro/clash/component/dialer"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/constant/provider"
-
-	"golang.org/x/net/publicsuffix"
 )
 
 type strategyFn = func(proxies []C.Proxy, metadata *C.Metadata) C.Proxy
@@ -39,22 +36,11 @@ func parseStrategy(config map[string]interface{}) string {
 }
 
 func getKey(metadata *C.Metadata) string {
-	if metadata.Host != "" {
-		// ip host
-		if ip := net.ParseIP(metadata.Host); ip != nil {
-			return metadata.Host
-		}
-
-		if etld, err := publicsuffix.EffectiveTLDPlusOne(metadata.Host); err == nil {
-			return etld
-		}
-	}
-
-	if metadata.DstIP == nil {
+	if metadata.SrcIP == nil {
 		return ""
 	}
 
-	return metadata.DstIP.String()
+	return metadata.SrcIP.String()
 }
 
 func jumpHash(key uint64, buckets int32) int32 {
